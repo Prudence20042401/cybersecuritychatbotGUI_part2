@@ -83,7 +83,7 @@ namespace CyberSecurityChatbotGUI
 
             if (input.Contains("curious"))
             {
-                return "Curiosity helps people learn more about staying safe online.";
+                return "Curiosity helps people learn have more knowlede about staying safe online.";
             }
 
             // memory feature
