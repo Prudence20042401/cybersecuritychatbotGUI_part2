@@ -74,6 +74,10 @@ namespace CyberSecurityChatbotGUI
                 return "My purpose is to teach you about cybersecurity and online safety.";
             }
 
+            if (input.Contains("advace"))
+            {
+                return "stay safe and dont let anyone scam you.";
+            }
             if (input.Contains("what can i ask"))
             {
                 return "You can ask me about passwords, phishing or safe browsing or scammers.";
