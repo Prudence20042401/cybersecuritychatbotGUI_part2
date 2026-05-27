@@ -129,7 +129,7 @@ namespace CyberSecurityChatbotGUI
             {
                 if (favouriteTopic != "")
                 {
-                    return "I remember that you are interested in " + favouriteTopic + ".";
+                    return "I remember that you have interested in " + favouriteTopic + ".";
                 }
 
                 return "I do not remember anything yet.";
