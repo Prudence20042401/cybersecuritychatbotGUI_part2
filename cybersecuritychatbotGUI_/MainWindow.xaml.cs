@@ -57,7 +57,7 @@ namespace CyberSecurityChatbotGUI
             else
             {
                 AddMessage("Bot",
-                    "Welcome to the Cybersecurity Awareness Bot.");
+                    "Welcome to the Cybersecurity Awareness Bot.Where we help you stay safe and secure");
                 AddMessage("Bot",
                     "Type 'exit' anytime you want to end the conversation.");
 
