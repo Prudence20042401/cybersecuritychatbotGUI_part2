@@ -89,6 +89,10 @@ namespace CyberSecurityChatbotGUI
                 return "It is normal to feel worried about online threats.";
             }
 
+            if (input.Contains("scared"))
+            {
+                return "It is normal to feel scared about online threats especially when you didnt protect you information proper.";
+            }
             if (input.Contains("frustrated"))
             {
                 return "Cybersecurity can feel confusing sometimes, but you are learning step by step.";
