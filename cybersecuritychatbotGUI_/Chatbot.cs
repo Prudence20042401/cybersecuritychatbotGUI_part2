@@ -47,6 +47,15 @@ namespace CyberSecurityChatbotGUI
                     "Safe browsing helps protect your personal information."
                 }
             }
+
+
+            {
+                "scam",
+                new List<string>()
+                {
+                    "scammers is Scammers often pretend to be someone you trust, such as a bank official, tech support, government agency, or delivery service."
+                }
+            },
         };
 
         // chatbot response method
@@ -67,7 +76,7 @@ namespace CyberSecurityChatbotGUI
 
             if (input.Contains("what can i ask"))
             {
-                return "You can ask me about passwords, phishing or safe browsing.";
+                return "You can ask me about passwords, phishing or safe browsing or scammers.";
             }
 
             // sentiment detection
@@ -83,7 +92,7 @@ namespace CyberSecurityChatbotGUI
 
             if (input.Contains("curious"))
             {
-                return "Curiosity helps people learn have more knowlede about staying safe online.";
+                return "Curiosity helps people learn more about staying safe online.";
             }
 
             // memory feature
