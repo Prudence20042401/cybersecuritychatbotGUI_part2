@@ -46,16 +46,20 @@ namespace CyberSecurityChatbotGUI
                     "Do not download files from untrusted websites.",
                     "Safe browsing helps protect your personal information."
                 }
-            }
 
+            },
+                {
 
-            {
                 "scam",
                 new List<string>()
                 {
-                    "scammers is Scammers often pretend to be someone you trust, such as a bank official, tech support, government agency, or delivery service."
+                    "scammers is Scammers often pretend to be someone you trust, such as a bank official, tech support, government agency, or delivery service.",
+                    "scams are fake tricks used to steal money or information.",
+                    "Never trust messages asking for personal details."
                 }
-            },
+                }
+
+           
         };
 
         // chatbot response method
@@ -74,13 +78,13 @@ namespace CyberSecurityChatbotGUI
                 return "My purpose is to teach you about cybersecurity and online safety.";
             }
 
-            if (input.Contains("advace"))
+            if (input.Contains("advice"))
             {
-                return "stay safe and dont let anyone scam you.";
+                return "stay safe and dont let anyone ask for your personal details.";
             }
             if (input.Contains("what can i ask"))
             {
-                return "You can ask me about passwords, phishing or safe browsing or scammers.";
+                return "You can ask me about passwords, phishing or safe browsing or scammers or history.";
             }
 
             // sentiment detection
@@ -170,7 +174,7 @@ namespace CyberSecurityChatbotGUI
             }
 
             // unknown response
-            return "I did not understand that. Try asking about passwords or phishing.";
+            return "I did not understand, ask me about Passwords, Phishing,Browsing, Scam, History";
         }
     }
 }
