@@ -5,16 +5,11 @@ namespace CyberSecurityChatbotGUI
 {
     class Chatbot
     {
-        // random object for random responses
         Random random = new Random();
 
-        // remembers previous topic
         string lastTopic = "";
-
-        // remembers favourite topic
         string favouriteTopic = "";
 
-        // chatbot responses
         Dictionary<string, List<string>> responses =
             new Dictionary<string, List<string>>()
         {
@@ -22,9 +17,9 @@ namespace CyberSecurityChatbotGUI
                 "password",
                 new List<string>()
                 {
-                    "Use strong passwords with letters, numbers and symbols. Do not share your password.",
-                    "Avoid using the same password for multiple accounts.",
-                    "Change your passwords regularly for better security."
+                    "Passwords are secret words used to protect your accounts.",
+                    "Use strong passwords with letters, numbers and symbols.",
+                    "Avoid using the same password for multiple accounts."
                 }
             },
 
@@ -32,149 +27,97 @@ namespace CyberSecurityChatbotGUI
                 "phishing",
                 new List<string>()
                 {
-                    "Phishing is when scammers trick you into giving personal information through fake emails or links.",
-                    "Always check suspicious emails before clicking links.",
-                    "Scammers often pretend to be trusted companies."
+                    "Phishing is a cyberattack that tricks people into revealing personal information.",
+                    "Never click suspicious links in emails.",
+                    "Always verify messages before entering personal information."
                 }
             },
 
             {
-                "browsing",
+                "privacy",
                 new List<string>()
                 {
-                    "Always use secure websites and avoid clicking unknown links.",
-                    "Do not download files from untrusted websites.",
-                    "Safe browsing helps protect your personal information."
+                    "Privacy means protecting personal information online.",
+                    "Do not share passwords or sensitive information publicly.",
+                    "Always check app permissions."
                 }
-
             },
-                {
 
+            {
+                "malware",
+                new List<string>()
+                {
+                    "Malware is harmful software that damages devices.",
+                    "Viruses and ransomware are types of malware.",
+                    "Install antivirus software."
+                }
+            },
+
+            {
+                "vpn",
+                new List<string>()
+                {
+                    "VPN means Virtual Private Network.",
+                    "A VPN encrypts internet traffic.",
+                    "VPNs improve privacy when using public WiFi."
+                }
+            },
+
+            {
                 "scam",
                 new List<string>()
                 {
-                    "scammers is Scammers often pretend to be someone you trust, such as a bank official, tech support, government agency, or delivery service.",
-                    "scams are fake tricks used to steal money or information.",
-                    "Never trust messages asking for personal details."
+                    "Scams are fake tricks used to steal money.",
+                    "Never trust requests for personal details.",
+                    "Scammers pretend to be trusted people."
                 }
-                }
-
-           
+            }
         };
 
-        // chatbot response method
         public string GetResponse(string input, string userName)
         {
             input = input.ToLower();
 
-            // chatbot responses
-            if (input.Contains("how are you"))
+            if (input == "exit")
             {
-                return "I am fine and ready to help you stay safe online.";
+                return "Goodbye " + userName +
+                       ". Stay safe online.";
             }
 
-            if (input.Contains("purpose"))
-            {
-                return "My purpose is to teach you about cybersecurity and online safety.";
-            }
-
-            if (input.Contains("advice"))
-            {
-                return "stay safe and dont let anyone ask for your personal details.";
-            }
-            if (input.Contains("what can i ask"))
-            {
-                return "You can ask me about passwords, phishing or safe browsing or scammers or history.";
-            }
-
-            // sentiment detection
-            if (input.Contains("worried"))
-            {
-                return "It is normal to feel worried about online threats.";
-            }
-
-            if (input.Contains("scared"))
-            {
-                return "It is normal to feel scared about online threats especially when you didnt protect you information proper.";
-            }
-            if (input.Contains("frustrated"))
-            {
-                return "Cybersecurity can feel confusing sometimes, but you are learning step by step.";
-            }
-
-            if (input.Contains("curious"))
-            {
-                return "Curiosity helps people learn more about staying safe online.";
-            }
-
-            // memory feature
-            if (input.Contains("i like"))
-            {
-                if (input.Contains("password"))
-                {
-                    favouriteTopic = "password";
-                }
-
-                else if (input.Contains("phishing"))
-                {
-                    favouriteTopic = "phishing";
-                }
-
-                else if (input.Contains("browsing"))
-                {
-                    favouriteTopic = "browsing";
-                }
-
-                return "I will remember that you are interested in " + favouriteTopic + ".";
-            }
-
-            // memory recall
-            if (input.Contains("remember"))
-            {
-                if (favouriteTopic != "")
-                {
-                    return "I remember that you have interested in " + favouriteTopic + ".";
-                }
-
-                return "I do not remember anything yet.";
-            }
-
-            // conversation flow
-            if (input.Contains("tell me more") ||
-                input.Contains("another tip") ||
-                input.Contains("explain more"))
-            {
-                if (lastTopic != "")
-                {
-                    List<string> moreResponses = responses[lastTopic];
-
-                    return moreResponses[random.Next(moreResponses.Count)];
-                }
-
-                return "Please ask about a topic first.";
-            }
-
-            // keyword recognition
             foreach (var keyword in responses.Keys)
             {
                 if (input.Contains(keyword))
                 {
                     lastTopic = keyword;
 
-                    List<string> selectedResponses = responses[keyword];
+                    List<string> selected =
+                    responses[keyword];
 
-                    return selectedResponses[random.Next(selectedResponses.Count)];
+                    string response =
+                    selected[random.Next(selected.Count)];
+
+                    return response +
+
+                    "\n\nDo you want to ask anything else?\n" +
+                    "Options:\n" +
+                    "• Password\n" +
+                    "• Phishing\n" +
+                    "• Privacy\n" +
+                    "• Malware\n" +
+                    "• VPN\n" +
+                    "• Exit";
                 }
             }
 
-            // exit response
-            if (input == "exit")
-            {
-                return "Goodbye " + userName + ". Stay safe online.";
-            }
-
-            // unknown response
-            return "I did not understand, ask me about Passwords, Phishing,Browsing, Scam, History";
+            return
+            "I did not understand.\n\n" +
+            "Options:\n" +
+            "• Password\n" +
+            "• Phishing\n" +
+            "• Privacy\n" +
+            "• Malware\n" +
+            "• VPN\n" +
+            "• Exit";
         }
     }
 }

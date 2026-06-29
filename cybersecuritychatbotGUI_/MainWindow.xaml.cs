@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CyberSecurityChatbotGUI.Models;
+using CyberSecurityChatbotGUI.Services;
+using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Documents;
@@ -8,13 +10,29 @@ namespace CyberSecurityChatbotGUI
 {
     public partial class MainWindow : Window
     {
-        // chatbot object
-        Chatbot bot = new Chatbot();
+        ActivityLogService activity =
+            new ActivityLogService();
 
-        // user data
-        string userName = "";
-        bool returningUser = false;
-        bool feelingAnswered = false;
+        NLPService nlp =
+            new NLPService();
+
+        QuizService quiz =
+            new QuizService();
+
+        DatabaseService database =
+            new DatabaseService();
+
+        Chatbot bot =
+            new Chatbot();
+
+        private int chatState = 0;
+
+        private string userName = "";
+
+        private string feeling = "";
+
+        int currentQuestion = 0;
+        int score = 0;
 
         public MainWindow()
         {
@@ -23,213 +41,582 @@ namespace CyberSecurityChatbotGUI
             AudioHelper.PlayGreeting();
 
             txtAsciiArt.Text = @"
-          _______
-         /       \
-        /         \
-       |           | <SECURED!>
-        \_________/
-        |         |
-        |   ___   |
-        |  | o |  |
-        |  |___|  |
-        |         |
-        |_________|
+     _____
+    /     \
+   |SECURE|
+    \_____/
+       ||
+      [🔒]
 ";
 
-            AddMessage("Bot",
-                "Welcome to the Cybersecurity Awareness Bot.");
+            // hide ONLY these tabs initially
 
-            AddMessage("Bot",
-                "Please enter your name.");
+            TaskTab.Visibility =
+            Visibility.Collapsed;
+
+            QuizTab.Visibility =
+            Visibility.Collapsed;
+
+            LogTab.Visibility =
+            Visibility.Collapsed;
+
+            AddMessage(
+            "Bot",
+            "Welcome to Cybersecurity Awareness Assistant");
+
+            AddMessage(
+            "Bot",
+            "Please enter your name");
         }
-
-        
-        // GET USER FILE
-        
-        private string GetUserFile()
+        private void btnSend_Click(
+ object sender,
+ RoutedEventArgs e)
         {
-            return userName + "_conversation.txt";
-        }
-
-        
-        // SEND MESSAGE
-       
-        private void btnSend_Click(object sender, RoutedEventArgs e)
-        {
-            SendMessage();
-        }
-
-        private void txtUserInput_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                SendMessage();
-            }
-        }
-
-        private void SendMessage()
-        {
-            string input = txtUserInput.Text.Trim();
+            string input =
+            txtUserInput.Text.Trim();
 
             if (string.IsNullOrWhiteSpace(input))
-            {
-                MessageBox.Show("Please type something.");
                 return;
-            }
 
-            AddMessage("You", input);
+            AddMessage(
+            "You",
+            input);
 
-            // EXIT
-            if (input.ToLower() == "exit")
+            switch (chatState)
             {
-                AddMessage("Bot", "Goodbye " + userName + ". Stay safe online.");
-                Application.Current.Shutdown();
-                return;
-            }
+                // USER NAME
 
-            
-            // USERNAME
-            
-            if (userName == "")
-            {
-                userName = input;
+                case 0:
 
-                if (File.Exists("username.txt"))
-                {
-                    string savedName = File.ReadAllText("username.txt");
+                    userName = input;
 
-                    if (savedName.ToLower() == userName.ToLower())
+                    UserProfile user =
+                    database.GetUser(userName);
+
+                    if (user != null)
                     {
-                        returningUser = true;
+                        AddMessage(
+                        "Bot",
+                        "Welcome back "
+                        + user.Name);
 
-                        AddMessage("Bot", "Welcome back " + userName + ".");
+                        AddMessage(
+                        "Bot",
+                        "Last time you felt "
+                        + user.LastFeeling);
                     }
                     else
                     {
-                        AddMessage("Bot", "Hello " + userName + ".");
-                        File.WriteAllText("username.txt", userName);
+                        AddMessage(
+                        "Bot",
+                        "Nice to meet you "
+                        + userName);
                     }
-                }
-                else
-                {
-                    File.WriteAllText("username.txt", userName);
-                    AddMessage("Bot", "Hello " + userName + ".");
-                }
 
-                AddMessage("Bot", "How are you feeling today?");
-                txtUserInput.Clear();
-                return;
-            }
+                    AddMessage(
+                    "Bot",
+                    "How are you feeling today?");
 
-            
-            //SENTIMENTAL DETECTION
-            
-            if (!feelingAnswered)
-            {
-                feelingAnswered = true;
+                    chatState = 1;
 
-                if (input.ToLower().Contains("worried"))
-                    AddMessage("Bot", "It is normal to feel worried about online threats.");
+                    break;
 
-                else if (input.ToLower().Contains("curious"))
-                    AddMessage("Bot", "It is good to want to learn about safety.");
 
-                else if (input.ToLower().Contains("frustrated"))
-                    AddMessage("Bot", "Cybersecurity can feel confusing sometimes.");
+                // FEELINGS
 
-                else if (input.ToLower().Contains("happy"))
-                    AddMessage("Bot", "That is great to hear.");
+                case 1:
 
-                else
-                    AddMessage("Bot", "Thank you for sharing.");
+                    feeling =
+                    input.ToLower();
 
-                AddMessage("Bot", "What would you like to know?");
-                AddMessage("Bot", "Passwords, Phishing, Browsing, Scam, history");
-                AddMessage("Bot", "Type 'exit' to end the conversation.");
+                    database.SaveUser(
+                    userName,
+                    feeling);
 
-                txtUserInput.Clear();
-                return;
-            }
-
-            
-            // HISTORY
-          
-            if (input.ToLower() == "history")
-            {
-                string fileName = GetUserFile();
-
-                if (File.Exists(fileName))
-                {
-                    string history = File.ReadAllText(fileName);
-
-                    if (string.IsNullOrWhiteSpace(history))
+                    if (feeling.Contains("worried"))
                     {
-                        AddMessage("Bot", "No history found yet.");
+                        AddMessage(
+                        "Bot",
+                        "I understand online threats can be worrying.");
                     }
+
+                    else if (feeling.Contains("happy"))
+                    {
+                        AddMessage(
+                        "Bot",
+                        "Great! Positive energy helps learning.");
+                    }
+
+                    else if (feeling.Contains("frustrated"))
+                    {
+                        AddMessage(
+                        "Bot",
+                        "Cybersecurity can be difficult. I will help.");
+                    }
+
                     else
                     {
-                        AddMessage("Bot", "Here is your recent activity:");
-                        AddMessage("History", history);
+                        AddMessage(
+                        "Bot",
+                        "Thank you for sharing.");
                     }
-                }
-                else
-                {
-                    AddMessage("Bot", "No history found for this user.");
-                }
 
-                AddMessage("Bot", "Ask something about cybersecurity:");
-                AddMessage("Bot", "Passwords, Phishing, Browsing, Scam");
-                AddMessage("Bot", "Type 'exit' to end.");
+                    AddMessage(
+                    "Bot",
+                    "How can I help you today?");
 
-                txtUserInput.Clear();
-                return;
+                    AddMessage(
+                    "Bot",
+                    "Topics:");
+
+                    AddMessage(
+                    "Bot",
+                    "• Password");
+
+                    AddMessage(
+                    "Bot",
+                    "• Phishing");
+
+                    AddMessage(
+                    "Bot",
+                    "• Privacy");
+
+                    AddMessage(
+                    "Bot",
+                    "• Malware");
+
+                    AddMessage(
+                    "Bot",
+                    "• VPN");
+
+                    AddMessage(
+                    "Bot",
+                    "• Exit");
+
+
+                    TaskTab.Visibility =
+                    Visibility.Visible;
+
+                    QuizTab.Visibility =
+                    Visibility.Visible;
+
+                    LogTab.Visibility =
+                    Visibility.Visible;
+
+                    chatState = 2;
+
+                    break;
+
+
+                default:
+
+                    string intent =
+                    nlp.DetectIntent(input);
+
+                    switch (intent)
+                    {
+                        case "quiz":
+
+                            activity.Add(
+                            "Quiz Started");
+
+                            ShowActivityLog();
+
+                            MainTabs.SelectedIndex = 2;
+
+                            break;
+
+
+                        case "task":
+
+                            MainTabs.SelectedIndex = 1;
+
+                            AddMessage(
+                            "Bot",
+                            "Opening Task Assistant");
+
+                            break;
+
+
+                        case "log":
+
+                            MainTabs.SelectedIndex = 3;
+
+                            ShowActivityLog();
+
+                            break;
+
+
+                        default:
+
+                            string response =
+                            bot.GetResponse(
+                            input,
+                            userName);
+
+                            AddMessage(
+                            "Bot",
+                            response);
+
+                            activity.Add(
+                            "Chat: "
+                            + input);
+
+                            ShowActivityLog();
+
+                            break;
+                    }
+
+                    break;
             }
-         // CHATBOT RESPONSE
-            
-            string response = bot.GetResponse(input, userName);
-            AddMessage("Bot", response);
-
-            AddMessage("Bot",
-                "Anything else? Passwords, Phishing, Browsing, Scam");
 
             txtUserInput.Clear();
         }
-
-        
-        // DISPLAY MESSAGE
-     
-        private void AddMessage(string sender, string message)
+        private void txtTaskTitle_GotFocus(
+object sender,
+RoutedEventArgs e)
         {
-            Paragraph paragraph = new Paragraph();
+            if (txtTaskTitle.Text == "Enter task title")
+            {
+                txtTaskTitle.Text = "";
+            }
+        }
 
-            Run senderRun = new Run(sender + ": ");
+        private void txtTaskTitle_LostFocus(
+        object sender,
+        RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(
+                txtTaskTitle.Text))
+            {
+                txtTaskTitle.Text =
+                "Enter task title";
+            }
+        }
+
+
+        private void txtDescription_GotFocus(
+        object sender,
+        RoutedEventArgs e)
+        {
+            if (txtDescription.Text ==
+                "Enter task description")
+            {
+                txtDescription.Text = "";
+            }
+        }
+
+        private void txtDescription_LostFocus(
+        object sender,
+        RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(
+                txtDescription.Text))
+            {
+                txtDescription.Text =
+                "Enter task description";
+            }
+        }
+
+
+        private void AddTask()
+        {
+            TaskItem task =
+            new TaskItem
+            {
+                Title = txtTaskTitle.Text,
+                Description = txtDescription.Text,
+                ReminderDate = dpReminder.SelectedDate,
+                Completed = false
+            };
+
+            database.AddTask(task);
+
+            TaskList.ItemsSource = null;
+            TaskList.ItemsSource =
+            database.GetTasks();
+
+            activity.Add(
+            "Task Added: "
+            + task.Title);
+
+            ShowActivityLog();
+
+            AddMessage(
+            "Bot",
+            "Task added successfully");
+
+
+            // Clear fields
+
+            txtTaskTitle.Text =
+            "Enter task title";
+
+            txtDescription.Text =
+            "Enter task description";
+
+            dpReminder.SelectedDate = null;
+        }
+        private void AddMessage(
+string sender,
+string message)
+        {
+            Paragraph p =
+            new Paragraph();
+
+            Run senderRun =
+            new Run(sender + ": ");
+
+            senderRun.FontWeight =
+            FontWeights.Bold;
 
             if (sender == "Bot")
-                senderRun.Foreground = System.Windows.Media.Brushes.Cyan;
-            else if (sender == "You")
-                senderRun.Foreground = System.Windows.Media.Brushes.Yellow;
-            else if (sender == "History")
-                senderRun.Foreground = System.Windows.Media.Brushes.LightGreen;
+            {
+                senderRun.Foreground =
+                System.Windows.Media.Brushes.Cyan;
+            }
             else
-                senderRun.Foreground = System.Windows.Media.Brushes.White;
+            {
+                senderRun.Foreground =
+                System.Windows.Media.Brushes.DeepSkyBlue;
+            }
 
-            senderRun.FontWeight = FontWeights.Bold;
+            Run messageRun =
+            new Run(message);
 
-            Run messageRun = new Run(message);
-            messageRun.Foreground = System.Windows.Media.Brushes.White;
+            messageRun.Foreground =
+            System.Windows.Media.Brushes.White;
 
-            paragraph.Inlines.Add(senderRun);
-            paragraph.Inlines.Add(messageRun);
+            p.Inlines.Add(senderRun);
 
-            rtbChat.Document.Blocks.Add(paragraph);
+            p.Inlines.Add(messageRun);
+
+            rtbChat.Document
+            .Blocks.Add(p);
+
             rtbChat.ScrollToEnd();
 
-            
-            // SAVE PER USER HISTORY
-            
-            File.AppendAllText(
+            if (userName != "")
+            {
+                File.AppendAllText(
                 GetUserFile(),
-                sender + ": " + message + Environment.NewLine);
+                sender +
+                ": " +
+                message +
+                Environment.NewLine);
+            }
+        }
+
+
+        private string GetUserFile()
+        {
+            return userName
+            + "_conversation.txt";
+        }
+
+
+
+        void StartQuiz()
+        {
+            currentQuestion = 0;
+            score = 0;
+
+            LoadQuestion();
+        }
+
+
+
+        void LoadQuestion()
+        {
+            var q =
+            quiz.Questions[
+            currentQuestion];
+
+            txtQuestion.Text =
+            q.Question;
+
+            lstAnswers.Items.Clear();
+
+            foreach (var answer
+            in q.Answers)
+            {
+                lstAnswers.Items.Add(
+                answer);
+            }
+        }
+
+
+
+        private void btnQuizAnswer_Click(
+object sender,
+RoutedEventArgs e)
+        {
+            if (currentQuestion >= quiz.Questions.Count)
+                return;
+
+            var q =
+            quiz.Questions[currentQuestion];
+
+            if (lstAnswers.SelectedIndex == -1)
+            {
+                MessageBox.Show(
+                "Select an answer first");
+
+                return;
+            }
+
+            if (lstAnswers.SelectedIndex
+            == q.CorrectIndex)
+            {
+                score++;
+
+                AddMessage(
+                "Bot",
+                "Correct! "
+                + q.Explanation);
+            }
+            else
+            {
+                AddMessage(
+                "Bot",
+                "Incorrect! "
+                + q.Explanation);
+            }
+
+            currentQuestion++;
+
+            if (currentQuestion <
+            quiz.Questions.Count)
+            {
+                LoadQuestion();
+            }
+            else
+            {
+                AddMessage(
+                "Bot",
+
+                "Quiz Complete");
+
+                activity.Add(
+               "Quiz Score: "
+               + score);
+
+                string motivation = "";
+
+                if (score == 10)
+                {
+                    motivation =
+                    "10/10 Excellent! You know cybersecurity very well.";
+                }
+
+                else if (score >= 8)
+                {
+                    motivation =
+                    score +
+                    "/10 Great work! You understand cybersecurity well.";
+                }
+
+                else if (score >= 5)
+                {
+                    motivation =
+                    score +
+                    "/10 Good effort. Keep learning cybersecurity.";
+                }
+
+                else
+                {
+                    motivation =
+                    score +
+                    "/10 Keep practicing. You can improve.";
+                }
+
+                AddMessage(
+                "Bot",
+                motivation);
+
+                btnStartQuiz.Visibility =
+Visibility.Visible;
+
+                btnStartQuiz.Content =
+                "START QUIZ AGAIN";
+
+                txtQuestion.Visibility =
+                Visibility.Collapsed;
+
+                lstAnswers.Visibility =
+                Visibility.Collapsed;
+
+                btnSubmitQuiz.Visibility =
+                Visibility.Collapsed;
+            }
+        }
+        private void btnStartQuiz_Click(
+ object sender,
+ RoutedEventArgs e)
+        {
+            btnStartQuiz.Visibility =
+            Visibility.Collapsed;
+
+            txtQuestion.Visibility =
+            Visibility.Visible;
+
+            lstAnswers.Visibility =
+            Visibility.Visible;
+
+            btnSubmitQuiz.Visibility =
+            Visibility.Visible;
+
+            StartQuiz();
+        }
+
+
+        void ShowActivityLog()
+        {
+            lstLogs.Items.Clear();
+
+            var logs =
+            activity.GetRecent();
+
+            if (logs.Count == 0)
+            {
+                lstLogs.Items.Add(
+                "No activities yet");
+
+                return;
+            }
+
+            foreach (var item in logs)
+            {
+                lstLogs.Items.Add(
+                item.TimeStamp.ToString("HH:mm:ss")
+                + " - "
+                + item.Description);
+            }
+        }
+        private void btnAddTask_Click(
+          object sender,
+         RoutedEventArgs e)
+        {
+            AddTask();
+        }
+
+        private void btnSubmitQuiz_Click(
+        object sender,
+        RoutedEventArgs e)
+        {
+            btnQuizAnswer_Click(
+            sender,
+            e);
+        }
+
+        private void txtUserInput_KeyDown(
+         object sender,
+         KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                btnSend_Click(sender, e);
+            }
         }
     }
 }
